@@ -1,0 +1,25 @@
+awk -v l=11000 '(NR==1){header=$0;next}
+                (NR%l==2) {
+                   close(file); 
+                   file=sprintf("%s.%0.5d.csv",FILENAME,++c)
+                   sub(/csv[.]/,"",file)
+                   print header > file
+                }
+                {print > file}' <file_name>.csv
+               
+               
+This works in the following way:
+
+(NR==1){header=$0;next}: If the record/line is the first line, save that line as the header.
+(NR%l==2){...}: Every time we wrote l=11000 records/lines, we need to start writing to a new file. This happens every time the modulo of the record/line number hits 2. This is on the lines 2, 2+l, 2+2l, 2+3l,.... When such a line is found we do:
+close(file): close the file you just wrote too.
+file=sprintf("%s.%0.5d.csv",FILENAME,++c); sub(/csv[.]/,"",file): define the new filename as FILENAME.00XXX.csv
+print header > file: open the file and write the header to that file.
+{print > file}: write the entries to the file.
+
+note: If you don't care about the filename, you can use the following shorter version:
+awk -v m=100 '
+    (NR==1){h=$0;next}
+    (NR%m==2) { close(f); f=sprintf("%s.%0.5d",FILENAME,++c); print h > f }
+    {print > f}' file.csv
+               
